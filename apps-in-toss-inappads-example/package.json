@@ -5,14 +5,14 @@
     "version": "3.8.7"
   },
   "dependencies": {
-    "@apps-in-toss/web-framework": "^1.5.2"
+    "@apps-in-toss/web-framework": "^2.4.7"
   },
   "devDependencies": {},
   "scripts": {
     "cocos:dev": "/Applications/Cocos/Creator/3.8.7/CocosCreator.app/Contents/MacOS/CocosCreator --project .",
     "cocos:build": "/Applications/Cocos/Creator/3.8.7/CocosCreator.app/Contents/MacOS/CocosCreator --project . --build \"platform=web-mobile;outputName=.\" || true",
     "dev": "granite dev",
-    "build": "granite build",
+    "build": "ait build",
     "deploy": "ait deploy",
     "noop": ":"
   }

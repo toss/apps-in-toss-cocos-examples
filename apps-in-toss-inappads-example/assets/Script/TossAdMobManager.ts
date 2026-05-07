@@ -1,15 +1,14 @@
 import { _decorator, Button, Component, Node, Label, EditBox, Color, Layout, UITransform, view, Graphics } from 'cc';
-import { GoogleAdMob } from '@apps-in-toss/web-framework';
+import { loadFullScreenAd, showFullScreenAd } from '@apps-in-toss/web-framework';
 const { ccclass } = _decorator;
 
-const DEFAULT_AD_GROUP_ID = 'ait-ad-test-rewarded-id';
+const DEFAULT_AD_GROUP_ID = 'ait.dev.43daa14da3ae487b';
 
 @ccclass('TossAdMobManager')
 export class TossAdMobManager extends Component {
     private adGroupId: string = DEFAULT_AD_GROUP_ID;
     private loadResult: any = {};
     private showResult: any = {};
-    private rewardedResult: any = {};
     private events: any[] = [];
     private isSupported: boolean = false;
 
@@ -22,13 +21,13 @@ export class TossAdMobManager extends Component {
 
     start() {
         try {
-            this.isSupported = GoogleAdMob.loadAppsInTossAdMob.isSupported();
-            console.log('[TossAdMobManager] GoogleAdMob isSupported:', this.isSupported);
+            this.isSupported = loadFullScreenAd.isSupported();
+            console.log('[TossAdMobManager] FullScreenAd isSupported:', this.isSupported);
             if (!this.isSupported) {
-                console.warn('[TossAdMobManager] 현재 환경에서는 AdMob이 지원되지 않습니다.');
+                console.warn('[TossAdMobManager] 현재 환경에서는 통합 광고가 지원되지 않습니다.');
             }
         } catch (error) {
-            console.warn('[TossAdMobManager] GoogleAdMob 사용 불가:', error);
+            console.warn('[TossAdMobManager] 통합 광고 사용 불가:', error);
         }
 
         // 동적으로 UI 생성
@@ -82,7 +81,7 @@ export class TossAdMobManager extends Component {
         layout.paddingBottom = 0;
 
         // 제목 라벨 (더 크게)
-        const titleLabel = this.createLabel('AdMob 테스트 화면', titleFontSize, Color.WHITE);
+        const titleLabel = this.createLabel('통합 광고 테스트 화면', titleFontSize, Color.WHITE);
         this.container.addChild(titleLabel);
 
         // 지원 여부 표시 (더 크게)
@@ -381,7 +380,6 @@ export class TossAdMobManager extends Component {
             loadResult: this.loadResult,
             showResult: this.showResult,
             events: this.events,
-            rewardedResult: this.rewardedResult,
             isSupported: this.isSupported,
         };
 
@@ -395,34 +393,18 @@ export class TossAdMobManager extends Component {
                 this.adGroupId = this.adGroupIdInput.string || DEFAULT_AD_GROUP_ID;
             }
 
-            if (!GoogleAdMob.loadAppsInTossAdMob.isSupported()) {
-                console.warn('[TossAdMobManager] load: 지원되지 않는 환경입니다.');
-                this.loadResult = { error: '지원되지 않는 환경입니다.', from: 'validation' };
-                this.updateResultLabel();
-                return;
-            }
-
             console.log('[TossAdMobManager] load 시작:', { adGroupId: this.adGroupId });
 
-            GoogleAdMob.loadAppsInTossAdMob({
+            loadFullScreenAd({
                 options: {
                     adGroupId: this.adGroupId,
                 },
-                onEvent: (event: any) => {
-                    switch (event.type) {
-                        case 'loaded':
-                            this.loadResult = { success: true, from: 'onEvent', params: event.data };
-                            console.log('[TossAdMobManager] load 성공:', this.loadResult);
-                            break;
-
-                        default:
-                            this.events = [...this.events, { from: event.type }];
-                            console.log('[TossAdMobManager] load 이벤트:', event.type, event);
-                            break;
-                    }
+                onEvent: (event) => {
+                    console.log('[TossAdMobManager] load 이벤트:', event);
+                    this.events = [...this.events, event];
                     this.updateResultLabel();
                 },
-                onError: (error: any) => {
+                onError: (error) => {
                     this.loadResult = { error: error instanceof Error ? error.message : error, from: 'onError' };
                     console.warn('[TossAdMobManager] load 에러:', this.loadResult);
                     this.updateResultLabel();
@@ -442,30 +424,18 @@ export class TossAdMobManager extends Component {
                 this.adGroupId = this.adGroupIdInput.string || DEFAULT_AD_GROUP_ID;
             }
 
-            if (!GoogleAdMob.showAppsInTossAdMob.isSupported?.() && !GoogleAdMob.loadAppsInTossAdMob.isSupported()) {
-                console.warn('[TossAdMobManager] show: 지원되지 않는 환경입니다.');
-                this.showResult = { error: '지원되지 않는 환경입니다.', from: 'validation' };
-                this.updateResultLabel();
-                return;
-            }
-
             console.log('[TossAdMobManager] show 시작:', { adGroupId: this.adGroupId });
 
-            GoogleAdMob.showAppsInTossAdMob({
+            showFullScreenAd({
                 options: {
                     adGroupId: this.adGroupId,
                 },
-                onEvent: (event: any) => {
-                    if (event.type === 'userEarnedReward') {
-                        this.rewardedResult = { ...event.data };
-                        console.log('[TossAdMobManager] 보상 획득(userEarnedReward):', this.rewardedResult);
-                    } else {
-                        this.showResult = { success: true, from: 'onEvent', event };
-                        console.log('[TossAdMobManager] show 이벤트:', event.type, event);
-                    }
+                onEvent: (event) => {
+                    console.log('[TossAdMobManager] show 이벤트:', event);
+                    this.events = [...this.events, event];
                     this.updateResultLabel();
                 },
-                onError: (error: any) => {
+                onError: (error) => {
                     this.showResult = { error: error instanceof Error ? error.message : error, from: 'onError' };
                     console.warn('[TossAdMobManager] show 에러:', this.showResult);
                     this.updateResultLabel();
